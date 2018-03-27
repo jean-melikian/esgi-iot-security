@@ -9,7 +9,10 @@
     "mqtt": "^2.17.0",
     "mqtt-react": "0.0.3",
     "react": "^16.2.0",
-    "react-dom": "^16.2.0"
+    "react-dom": "^16.2.0",
+    "socket.io": "^2.0.4",
+    "zingchart": "^2.6.3",
+    "zingchart-react": "^1.0.6"
   },
   "scripts": {
     "start": "react-scripts start",
