@@ -6,7 +6,7 @@
 #include <ESP8266WiFi.h>
 #include <ArduinoJson.h>
 #include <PubSubClient.h>
-
+#define PARAMETERS_COUNT 7
 
 const int MPU_addr=0x68;  // I2C address of the MPU-6050
 int16_t AcX,AcY,AcZ,Tmp,GyX,GyY,GyZ;
@@ -23,11 +23,7 @@ PubSubClient client(espClient);
 void setup(){
   pinMode(BUILTIN_LED, OUTPUT);     // Initialize the BUILTIN_LED pin as an output
   
-  Wire.begin();
-  Wire.beginTransmission(MPU_addr);
-  Wire.write(0x6B);  // PWR_MGMT_1 register
-  Wire.write(0);     // set to zero (wakes up the MPU-6050)
-  Wire.endTransmission(true);
+  setup_accel();
   Serial.begin(115200);
 
   setup_wifi();
@@ -55,13 +51,27 @@ void loop(){
   root["gyx"]=(int16_t) (Wire.read()<<8|Wire.read());  // 0x43 (GYRO_XOUT_H) & 0x44 (GYRO_XOUT_L)
   root["gyy"]=(int16_t) (Wire.read()<<8|Wire.read());  // 0x45 (GYRO_YOUT_H) & 0x46 (GYRO_YOUT_L)
   root["gyz"]=(int16_t) (Wire.read()<<8|Wire.read());  // 0x47 (GYRO_ZOUT_H) & 0x48 (GYRO_ZOUT_L)
+
+  if(root.size() == PARAMETERS_COUNT) {
+    String json_str;
+    root.printTo(json_str);
+    Serial.println(json_str.c_str());
+    client.publish("accel", json_str.c_str());
+  } else {
+    Serial.println("Could not fetch data from MPU-6050...");
+    setup_accel();
+  }
   
-  String json_str;
-  root.printTo(json_str);
-  Serial.println(json_str.c_str());
-  Serial.print("Size: "); Serial.println(root.size());
-  client.publish("accel", json_str.c_str());
+  
   delay(500);
+}
+
+void setup_accel() {
+  Wire.begin();
+  Wire.beginTransmission(MPU_addr);
+  Wire.write(0x6B);  // PWR_MGMT_1 register
+  Wire.write(0);     // set to zero (wakes up the MPU-6050)
+  Wire.endTransmission(true);
 }
 
 void setup_wifi() {
